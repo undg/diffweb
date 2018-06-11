@@ -46,8 +46,12 @@ var width_large = 1000
 var width_xlarge = 1400
 var height = 500
 
+function timeout(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
 var runTest = async (url, is_mobile, width, folder) => {
-  console.log("width:"+chalk.blue(width)+"px    media:"+chalk.blue(is_mobile)+"    Address: "+chalk.blue(url) )
+  // console.log("width:"+chalk.blue(width)+"px    media:"+chalk.blue(is_mobile)+"    Address: "+chalk.blue(url) )
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
 
@@ -60,6 +64,7 @@ var runTest = async (url, is_mobile, width, folder) => {
     height: height
   })
   await page.goto(domain+url)
+  await timeout(10000)
   await page.screenshot({
     path: folder + '/' + filename,
     fullPage: true
