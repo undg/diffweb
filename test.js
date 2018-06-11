@@ -1,7 +1,7 @@
 // jshint esversion:6, strict:false
 const urlArr = [
-  index.html,
-  suppage.php
+'index.html'
+,'page/about.html'
 ]
 const domain = 'http://root.domain/'
 
@@ -47,7 +47,7 @@ var width_xlarge = 1400
 var height = 500
 
 var runTest = async (url, is_mobile, width, folder) => {
-  console.log("Address: "+url+" "+is_mobile)
+  console.log("width:"+chalk.blue(width)+"px    media:"+chalk.blue(is_mobile)+"    Address: "+chalk.blue(url) )
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
 
@@ -77,5 +77,5 @@ async function site_url(url){
   await runTest(url, 'desk', width_large, folder)
   await runTest(url, 'desk', width_xlarge, folder)
 }
-urlArr.forEach( async (el) => await site_url(el) )
+urlArr.forEach( (el) => site_url(el) )
 
