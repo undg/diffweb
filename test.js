@@ -1,4 +1,5 @@
 // jshint esversion:6, strict:false
+const diff_mode = true
 const urlArr = [
 'index.html'
 ,'page/about.html'
@@ -7,6 +8,9 @@ const domain = 'http://root.domain/'
 
 // const folder = 'orig'
 const folder = 'out'
+const out_folder = 'out'
+const orig_folder = 'orig'
+const diff_folder = 'diff'
 const misMatch_tolerance = 5
 
 const chalk = require('chalk')
@@ -20,10 +24,10 @@ function getDiff(filename){
   const options = {};
   // The parameters can be Node Buffers
   // data is the same as usual with an additional getBuffer() function
-  compare('orig/'+filename, 'out/'+filename, options, function (err, data) {
+  compare(orig_folder+'/'+filename, out_folder+'/'+filename, options, function (err, data) {
     if (err || data.misMatchPercentage > misMatch_tolerance ) {
       console.log(chalk.red('An error! --> ') + filename + ' ' + chalk.red(data.misMatchPercentage + '%'))
-      fs.writeFile('diff/'+filename, data.getBuffer(), "binary", (err) => {
+      fs.writeFile(diff_folder+'/'+filename, data.getBuffer(), "binary", (err) => {
         if(!err){var dupa = 'pupa'}
       })
     } else {
@@ -70,7 +74,9 @@ var runTest = async (url, is_mobile, width, folder) => {
     fullPage: true
     // clip: { x: 0, y: 0, width: width, height: height }
   })
-  await getDiff(filename)
+  if(diff_mode){
+    await getDiff(filename)
+  }
 
   await browser.close()
 }
@@ -82,5 +88,11 @@ async function site_url(url){
   await runTest(url, 'desk', width_large, folder)
   await runTest(url, 'desk', width_xlarge, folder)
 }
+
+// delete old diff's
+const rimraf = require('rimraf');
+
+rimraf('./diff/*.png', function () { console.log("deleting diff's and running tests\r\n----------------------------------"); });
+
 urlArr.forEach( (el) => site_url(el) )
 
