@@ -1,5 +1,5 @@
 {
-  "name": "PageTester",
+  "name": "diffweb",
   "version": "1.0.0",
   "description": "Making and comparing pages screenshot's",
   "main": "test.js",
@@ -9,11 +9,10 @@
   "author": "und3rdg",
   "license": "ISC",
   "dependencies": {
-    "puppeteer": "^1.5.0",
-    "resemblejs": "^2.10.3"
-  },
-  "devDependencies": {
     "chalk": "^2.4.1",
-    "fs": "0.0.1-security"
+    "fs": "0.0.1-security",
+    "puppeteer": "^1.5.0",
+    "resemblejs": "^2.10.3",
+    "rimraf": "^2.6.2"
   }
 }

@@ -1,0 +1,17 @@
+# VIM
+*~
+*.swp
+*.swo
+Session.vim
+
+# YCM
+.tern-project
+
+# BAD APPLE
+.DS_Store
+
+# NODE
+node_modules
+
+# PROJECT FILES
+screenshots
