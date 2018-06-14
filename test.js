@@ -8,16 +8,18 @@ const rimraf = require('rimraf');
 
 let Dw = {
   settings:{
+    first_run: false,
+    diff_mode: true,
+    timeout: 10000,
+    misMatch_tolerance: 5,
+
     url:{
       domain: 'http://domain.tld',
       pages:[ 
         '/en'
       ]
     },
-    first_run: false,
-    diff_mode: true,
-    timeout: 0,
-    misMatch_tolerance: 5,
+
     width:{
       small: 320,
       medium: 750,
@@ -37,8 +39,8 @@ let Dw = {
     }
   },
 
-  timeout: function(ms){
-    new Promise(resolve => setTimeout(resolve, ms))
+  delay: function(ms){
+    return new Promise(resolve => setTimeout(resolve, ms))
   },
 
   make_screenshoot: async function (url, is_mobile, width, folder){
@@ -47,7 +49,7 @@ let Dw = {
     const page = await browser.newPage()
 
     let filename = url.replace(/\//g, '-')+'_'+width+'_'+is_mobile+'.png'
-    let user_agent = (is_mobile === true ? this.settings.user_agent.mobile : this.settings.user_agent.desktop)
+    let user_agent = (is_mobile === 'mob' ? this.settings.user_agent.mobile : this.settings.user_agent.desktop)
 
     await page.setExtraHTTPHeaders({ 'User-Agent': user_agent })
     await page.setViewport({
@@ -55,9 +57,7 @@ let Dw = {
       height: 500
     })
     await page.goto(this.settings.url.domain+url)
-    if(this.timeout){
-      await this.timeout(this.settings.timeout)
-    }
+    await this.delay(this.settings.timeout)
     await page.screenshot({
       path: folder + '/' + filename,
       fullPage: true
