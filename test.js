@@ -101,6 +101,7 @@ console.log(chalk.yellow(this.diff_mode))
                     this.settings.folder.diff,
                     this.settings.folder.orig]
     dirArr.forEach((dir)=>{if(!fs.existsSync(dir)){fs.mkdirSync(dir)}})
+    rimraf('./' + this.settings.folder.diff + '*.png', ()=>console.log("diff's deleted"))
 
   },
 
