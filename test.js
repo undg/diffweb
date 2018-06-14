@@ -11,25 +11,25 @@ let Dw = {
     url:{
       domain: 'http://domain.tld',
       pages:[ 
-        '/',
-        '/en/'
+        '/en'
       ]
     },
     first_run: false,
     diff_mode: true,
     timeout: 0,
+    misMatch_tolerance: 5,
     width:{
       small: 320,
-      medium: 800,
+      medium: 750,
       large: 1000,
       xlarge: 1400
     },
 
     folder:{
-      root: 'screenshot',
-      out: 'out',
-      orig: 'orig',
-      diff: 'diff'
+      root: 'screenshot/',
+      out: 'out/',
+      orig: 'orig/',
+      diff: 'diff/'
     },
     user_agent:{
       mobile: "Mozilla/5.0 (Linux; Android 7.0; SM-G930V Build/NRD90M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.125 Mobile Safari/537.36Mozilla/5.0 (Linux; Android 7.0; SM-G930V Build/NRD90M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.125 Mobile Safari/537.36",
@@ -63,27 +63,30 @@ let Dw = {
       fullPage: true
       // clip: { x: 0, y: 0, width: width, height: height }
     })
-    if(this.diff_mode){
-      await this.get_diff(filename)
-    }
+    await this.get_diff(filename)
     await browser.close()
   },
 
   get_diff: function(filename){
     const options = {};
-    // The parameters can be Node Buffers
-    // data is the same as usual with an additional getBuffer() function
-    compare('orig/'+filename, 'out/'+filename, options, function (err, data) {
-      if (err || data.misMatchPercentage > misMatch_tolerance ) {
+    const orig = this.settings.folder.orig + filename
+    const out = this.settings.folder.out + filename
+    const diff = this.settings.folder.diff + filename
+
+    compare(orig, out, options, function (err, data) {
+      if (err || data.misMatchPercentage > this.settings.misMatch_tolerance ) {
         console.log(chalk.red('An error! --> ') + filename + ' ' + chalk.red(data.misMatchPercentage + '%'))
-        fs.writeFile('diff/'+filename, data.getBuffer(), "binary", (err) => {
+        fs.writeFile(diff, data.getBuffer(), "binary", (err) => {
           if(!err){var dupa = 'pupa'}
         })
       } else {
         console.log(chalk.green('All good! --> ') + filename + ' ' + chalk.green(data.misMatchPercentage + '%'))
         // console.log(data.getBuffer())
       }
-    })
+    }.bind(this))
+    if(this.diff_mode){
+console.log(chalk.yellow(this.diff_mode))
+    }
   },
 
   setup: function(){
@@ -108,7 +111,7 @@ let Dw = {
     await this.make_screenshoot(url, 'desk', this.settings.width.xlarge, this.settings.folder.out)
   },
   init: function(){
- emitter.setMaxListeners()
+    process.setMaxListeners(0);
     console.log(chalk.yellow('start'))
     this.prerun()
     this.setup()
