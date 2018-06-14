@@ -14,4 +14,6 @@ Session.vim
 node_modules
 
 # PROJECT FILES
-screenshots
+diff
+orig
+out

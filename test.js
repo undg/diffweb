@@ -9,11 +9,14 @@ const rimraf = require('rimraf');
 let Dw = {
   settings:{
     url:{
-      domain: 'http://localhost/',
-      pages:['index.php']
+      domain: 'http://domain.tld',
+      pages:[ 
+        '/',
+        '/en/'
+      ]
     },
-    first_run: true,
-    diff_mode: false,
+    first_run: false,
+    diff_mode: true,
     timeout: 0,
     width:{
       small: 320,
@@ -97,12 +100,22 @@ let Dw = {
     dirArr.forEach((dir)=>{if(!fs.existsSync(dir)){fs.mkdirSync(dir)}})
 
   },
+
+  site_url: async function(url){
+    await this.make_screenshoot(url, 'mob',  this.settings.width.small, this.settings.folder.out)
+    await this.make_screenshoot(url, 'mob',  this.settings.width.medium, this.settings.folder.out)
+    await this.make_screenshoot(url, 'desk', this.settings.width.large, this.settings.folder.out)
+    await this.make_screenshoot(url, 'desk', this.settings.width.xlarge, this.settings.folder.out)
+  },
   init: function(){
+ emitter.setMaxListeners()
     console.log(chalk.yellow('start'))
     this.prerun()
     this.setup()
     let folder = this.settings.folder.out
-    this.make_screenshoot(this.settings.url.pages[0], false, 1000, folder)
+    // this.make_screenshoot(this.settings.url.pages[0], false, 1000, folder)
+    
+    this.settings.url.pages.forEach( (el) => this.site_url(el) )
   }
 }
 
