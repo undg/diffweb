@@ -12,7 +12,7 @@ let Dw = {
   },
 
   make_screenshoot: async function (url, is_mobile, width, folder){
-    console.log("width:"+chalk.blue(width)+"px    media:"+chalk.blue(is_mobile)+"    Address: "+chalk.blue(url) )
+    // console.log("width:"+chalk.blue(width)+"px    media:"+chalk.blue(is_mobile)+"    Address: "+chalk.blue(url) )
     const browser = await puppeteer.launch({args: ['--no-sandbox']})
     const page = await browser.newPage()
 
