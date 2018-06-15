@@ -44,7 +44,22 @@ let Dw = {
   },
 
   get_diff: function(filename){
-    const options = {}
+    const options = {
+        output: {
+            errorColor: {
+                red: 0,
+                green: 255,
+                blue: 0 
+            },
+            errorType: 'movement',
+            transparency: 1,
+            largeImageThreshold: 1200,
+            useCrossOrigin: false,
+            outputDiff: true
+        },
+        scaleToSameSize: false,
+        ignore: ['nothing', 'less', 'antialiasing', 'colors', 'alpha']
+    }
     const orig    = this.settings.folder.orig + filename
     const out     = this.settings.folder.out + filename
     const diff    = this.settings.folder.diff + filename
