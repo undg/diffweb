@@ -19,6 +19,7 @@ let Dw = {
     let filename = url.replace(/\//g, '-')+'_'+width+'_'+is_mobile+'.png'
     let user_agent = (is_mobile === 'mob' ? this.settings.user_agent.mobile : this.settings.user_agent.desktop)
 
+    await page._client.send('Animation.setPlaybackRate', { playbackRate: this.settings.animation_speed });
     await page.setExtraHTTPHeaders({ 'User-Agent': user_agent })
     await page.setViewport({
       width  : width,
