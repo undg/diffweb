@@ -36,14 +36,14 @@ let Dw = {
       // clip: { x: 0, y: 0, width: width, height: height }
     })
     try{
-      await this.get_diff(filename)
+      await this.get_diff(filename, this.settings.url.domain+url)
     } catch(err){
       console.log(chalk.red("orig folder is empty."), chalk.yellow("Noting to compare."))
     }
     await browser.close()
   },
 
-  get_diff: function(filename){
+  get_diff: function(filename, url){
     const options = {
         output: {
             errorColor: {
@@ -66,12 +66,12 @@ let Dw = {
 
     compare(orig, out, options, function (err, data) {
       if (err || data.misMatchPercentage > this.settings.misMatch_tolerance ) {
-        console.log(chalk.red('An error! --> ') + filename + ' ' + chalk.red(data.misMatchPercentage + '%'))
+        console.log(chalk.red('An error! --> ') + filename + ' ' + chalk.red(data.misMatchPercentage + '%') + ' ' + chalk.blue(url))
         fs.writeFile(diff, data.getBuffer(), "binary", (err) => {
           if(!err){var dupa = 'pupa'}
         })
       } else {
-        console.log(chalk.green('All good! --> ') + filename + ' ' + chalk.green(data.misMatchPercentage + '%'))
+        console.log(chalk.green('All good! --> ') + filename + ' ' + chalk.green(data.misMatchPercentage + '%') + ' ' + chalk.blue(url))
       }
     }.bind(this))
     if(this.diff_mode){
