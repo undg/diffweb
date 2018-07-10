@@ -16,7 +16,7 @@ let Dw = {
     const browser = await puppeteer.launch({args: ['--no-sandbox']})
     const page = await browser.newPage()
 
-    let filename = url.replace(/\//g, '-')+'_'+width+'_'+is_mobile+'.png'
+    let filename = url.replace(/\//g, '-')+'_'+width+'_'+is_mobile+'.jpg'
     let user_agent = (is_mobile === 'mob' ? this.settings.user_agent.mobile : this.settings.user_agent.desktop)
 
     await page._client.send('Animation.setPlaybackRate', { playbackRate: this.settings.animation_speed });
@@ -33,7 +33,8 @@ let Dw = {
     await this.delay(this.settings.timeout)
     await page.screenshot({
       path     : folder + '/' + filename,
-      fullPage : true
+      fullPage : true,
+      quality  : 80
       // clip: { x: 0, y: 0, width: width, height: height }
     })
     try{
