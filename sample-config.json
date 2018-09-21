@@ -20,6 +20,10 @@
     "large": 1000,
     "xlarge": 1400
   },
+  "height": 500,
+
+  "isFullPage": true,
+  "quality": 75,
 
   "folder":{
     "out": "out/",

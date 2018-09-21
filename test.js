@@ -11,6 +11,7 @@ let Dw = {
     return new Promise(resolve => setTimeout(resolve, ms))
   },
 
+
   make_screenshoot: async function (url, is_mobile, width, folder){
     // console.log("width:"+chalk.blue(width)+"px    media:"+chalk.blue(is_mobile)+"    Address: "+chalk.blue(url) )
     const browser = await puppeteer.launch({args: ['--no-sandbox']})
@@ -23,7 +24,7 @@ let Dw = {
     await page.setExtraHTTPHeaders({ 'User-Agent': user_agent })
     await page.setViewport({
       width  : width,
-      height : 500
+      height : this.settings.height
     })
     try {
       await page.goto(this.settings.url.domain+url,{domcontentloaded: true})
@@ -33,17 +34,19 @@ let Dw = {
     await this.delay(this.settings.timeout)
     await page.screenshot({
       path     : folder + '/' + filename,
-      fullPage : true,
-      quality  : 80
+      fullPage : this.settings.isFullPage,
+      quality  : this.settings.quality,
       // clip: { x: 0, y: 0, width: width, height: height }
     })
     try{
       await this.get_diff(filename, this.settings.url.domain+url)
     } catch(err){
-      console.log(chalk.red("orig folder is empty."), chalk.yellow("Noting to compare."))
+      console.log(chalk.red("orig/", filename), "missing", chalk.yellow("Noting to compare."), this.settings.url.domain+url)
     }
     await browser.close()
   },
+
+
 
   get_diff: function(filename, url){
     const options = {
@@ -68,18 +71,21 @@ let Dw = {
 
     compare(orig, out, options, function (err, data) {
       if (err || data.misMatchPercentage > this.settings.misMatch_tolerance ) {
-        console.log(chalk.red('An error! --> ') + filename + ' ' + chalk.red(data.misMatchPercentage + '%') + ' ' + chalk.blue(url))
+        console.log(chalk.yellow('DIFF! --> ') + filename + ' ' + chalk.red(data.misMatchPercentage + '%') + ' ' + chalk.blue(url))
         fs.writeFile(diff, data.getBuffer(), "binary", (err) => {
           if(!err){var dupa = 'pupa'}
         })
       } else {
-        console.log(chalk.green('All good! --> ') + filename + ' ' + chalk.green(data.misMatchPercentage + '%') + ' ' + chalk.blue(url))
+        console.log(chalk.green('Good! --> ') + filename + ' ' + chalk.green(data.misMatchPercentage + '%') + ' ' + chalk.blue(url))
       }
     }.bind(this))
     if(this.diff_mode){
       console.log(chalk.yellow(this.diff_mode))
+      //todo
     }
   },
+
+
 
   setup: function(){
     if(this.first_run){
@@ -88,14 +94,17 @@ let Dw = {
     }
   },
 
+
+
   prerun: function(){
     const dirArr = [this.settings.folder.out,
                     this.settings.folder.diff,
                     this.settings.folder.orig]
     dirArr.forEach((dir)=>{if(!fs.existsSync(dir)){fs.mkdirSync(dir)}})
     rimraf('./' + this.settings.folder.diff + '*.jpg', ()=>console.log("diff's deleted"))
-
   },
+
+
 
   site_url: async function(url){
     await this.make_screenshoot(url , 'mob'  , this.settings.width.small  , this.settings.folder.out)
@@ -103,6 +112,9 @@ let Dw = {
     await this.make_screenshoot(url , 'desk' , this.settings.width.large  , this.settings.folder.out)
     await this.make_screenshoot(url , 'desk' , this.settings.width.xlarge , this.settings.folder.out)
   },
+
+
+
   init: function(){
     process.setMaxListeners(0)
     this.settings = require( "./config.json" ) // local config, copy from sample-config.json
