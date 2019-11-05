@@ -8,7 +8,7 @@ Browse screenshots instead surfing in browser to check all pages, resolutions, m
 ## Installation ## 
 
 ```
-npm install
+npm start
 cp sample-config.json config.json
 ```
 
@@ -18,7 +18,7 @@ Add domain and pages to config.json, set what you want to set...
 
 `npm test`
 
-After first run copy images from `out/` to `orig/`.
+After first run it will copy images from `out/` to `orig/`.
 
 
 ## Folder structure ##

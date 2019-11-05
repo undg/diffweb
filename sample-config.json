@@ -1,6 +1,4 @@
 {
-  "first_run": false,
-  "diff_mode": true,
   "timeout": 0,
   "animation_speed": 1,
   "misMatch_tolerance": 5,
