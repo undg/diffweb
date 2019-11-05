@@ -69,8 +69,6 @@ const Dw = {
         const out     = this.settings.folder.out  + filename
         const diff    = this.settings.folder.diff + filename
 
-        console.log(out)
-        console.log(orig)
 
         try {
             fs.lstatSync(orig).isFile()
