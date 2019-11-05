@@ -1,54 +1,64 @@
 // jshint esversion:6, node:true, strict:false, asi: true,
 
-const puppeteer   = require('puppeteer')            // making screenshots
-const resemblejs  = require('resemblejs')           // compare images
-const chalk       = require('chalk')                // colors in console.log
-const fs          = require('fs')                   // filesytem
-const rimraf      = require('rimraf')               // rm -rf
+// making screenshots
+const puppeteer   = require('puppeteer')
+// compare images
+const resemblejs  = require('resemblejs')
+// file system
+const fs          = require('fs')
+// rm -rf
+const rimraf      = require('rimraf')
+// colors in console.log
+const chalk       = require('chalk')
+const {red, green, yellow, blue} = chalk
 
-const Dw = {
-    delay: function(ms){
+// local config, copy from sample-config.js
+const cfg = require( "./config.js" )
+
+class Dw {
+    delay(ms){
         return new Promise(resolve => setTimeout(resolve, ms))
-    },
+    }
 
 
-    make_screenshoot: async function (url, is_mobile, width, folder){
-        console.log("width:"+chalk.blue(width)+"px    media:"+chalk.blue(is_mobile)+"    Address: "+chalk.blue(url) )
-        const filename = url.replace(/\//g, '-')+'_'+width+'_'+is_mobile+'.jpg'
-        const page_url = this.settings.url.domain+url
+    async make_screenshoot(url, is_mobile, width, folder){
+        const name = url.replace(/\//g, '-')
+        const filename = `${name}_${width}_${is_mobile}.jpg`
+        const page_url = cfg.url.domain+url
         const user_agent = is_mobile === 'mob'
-            ? this.settings.user_agent.mobile
-            : this.settings.user_agent.desktop
+            ? cfg.user_agent.mobile
+            : cfg.user_agent.desktop
 
         const browser = await puppeteer.launch()
         const page = await browser.newPage()
 
-        await page._client.send('Animation.setPlaybackRate', { playbackRate: this.settings.animation_speed });
+        await page._client.send('Animation.setPlaybackRate', { playbackRate: cfg.animation_speed });
         await page.setExtraHTTPHeaders({ 'User-Agent': user_agent })
         await page.setViewport({
             width  : width,
-            height : this.settings.height
+            height : cfg.height
         })
         try {
             await page.goto(page_url, {domcontentloaded: true})
         } catch(err) {
-            console.log(chalk.red(page_url + " (404)"))
+            console.log(red(page_url + " (404)"))
         }
-        await this.delay(this.settings.timeout)
+        await this.delay(cfg.timeout)
         await page.screenshot({
             path     : folder + '/' + filename,
-            fullPage : this.settings.isFullPage,
-            quality  : this.settings.quality,
+            fullPage : cfg.isFullPage,
+            quality  : cfg.quality,
             // clip: { x: 0, y: 0, width: width, height: height }
         })
 
-        await this.get_diff(filename, page_url)
         await browser.close()
-    },
+
+        this.get_diff(filename, page_url)
+    }
 
 
 
-    get_diff: function(filename, url){
+    get_diff(filename, url){
         const options = {
             output: {
                 errorColor: {
@@ -65,68 +75,71 @@ const Dw = {
             scaleToSameSize: false,
             ignore: ['nothing', 'less', 'antialiasing', 'colors', 'alpha']
         }
-        const orig    = this.settings.folder.orig + filename
-        const out     = this.settings.folder.out  + filename
-        const diff    = this.settings.folder.diff + filename
+        const orig    = cfg.folder.orig + filename
+        const out     = cfg.folder.out  + filename
+        const diff    = cfg.folder.diff + filename
 
 
+        this.fileShouldExist(orig, out, url)
+
+        resemblejs.compare(orig, out, options, (err, data) => {
+            if (err || data.misMatchPercentage > cfg.misMatch_tolerance ) {
+                try {
+                    console.log(`${red('DIFF! --> ')}  ${red(data.misMatchPercentage + '%')} ${blue(url)} ${filename}`)
+                    fs.writeFileSync(diff, data.getBuffer(), "binary")
+                } catch(err) {
+                    console.log(red(err))
+                }
+            } else {
+                console.log(`${green('Good! --> ')}  ${green(data.misMatchPercentage + '%')} ${blue(url)} ${filename}`)
+            }
+        })
+    }
+
+    fileShouldExist(orig, out, url) {
         try {
             fs.lstatSync(orig).isFile()
         } catch(err) {
             if(err.code === "ENOENT") {
-                console.log(chalk.red(orig, "missing", chalk.yellow("Noting to compare."), url))
-                console.log(chalk.yellow("Copy from:"), out, chalk.yellow("to:"), orig)
+                console.log(red(orig, "is missing", yellow("Noting to compare."), url))
+                console.log(yellow("Copy from:"), out, yellow("to:"), orig)
                 fs.copyFileSync(out, orig)
             } else {
-                console.log(chalk.red(err))
+                console.log(red(err))
             }
-            return
         }
+    }
 
-        resemblejs.compare(orig, out, options, (err, data) => {
-            if (err || data.misMatchPercentage > this.settings.misMatch_tolerance ) {
-                try {
-                    console.log(chalk.yellow('DIFF! --> ') + filename + ' ' + chalk.red(data.misMatchPercentage + '%') + ' ' + chalk.blue(url))
-                    fs.writeFileSync(diff, data.getBuffer(), "binary")
-                } catch(err) {
-                    console.log(chalk.red(err))
-                }
-            } else {
-                console.log(chalk.green('Good! --> ') + filename + ' ' + chalk.green(data.misMatchPercentage + '%') + ' ' + chalk.blue(url))
-            }
-        })
 
-    },
+    emptyFolders(){
+        const dirArr = [
+            cfg.folder.out,
+            cfg.folder.diff,
+            cfg.folder.orig
+        ]
+        dirArr.forEach(dir=>{if(!fs.existsSync(dir)){fs.mkdirSync(dir)}})
+        rimraf('./' + cfg.folder.diff + '*.jpg', ()=>console.log("diff's deleted"))
+        rimraf('./' + cfg.folder.out + '*.jpg', ()=>console.log("out's deleted"))
+    }
 
 
 
-    prerun: function(){
-        const dirArr = [this.settings.folder.out,
-            this.settings.folder.diff,
-            this.settings.folder.orig]
-        dirArr.forEach((dir)=>{if(!fs.existsSync(dir)){fs.mkdirSync(dir)}})
-        rimraf('./' + this.settings.folder.diff + '*.jpg', ()=>console.log("diff's deleted"))
-    },
+    async site_url(url){
+        await this.make_screenshoot(url , 'mob'  , cfg.width.small  , cfg.folder.out)
+        await this.make_screenshoot(url , 'mob'  , cfg.width.medium , cfg.folder.out)
+        await this.make_screenshoot(url , 'desk' , cfg.width.large  , cfg.folder.out)
+        await this.make_screenshoot(url , 'desk' , cfg.width.xlarge , cfg.folder.out)
+    }
 
 
 
-    site_url: async function(url){
-        await this.make_screenshoot(url , 'mob'  , this.settings.width.small  , this.settings.folder.out)
-        await this.make_screenshoot(url , 'mob'  , this.settings.width.medium , this.settings.folder.out)
-        await this.make_screenshoot(url , 'desk' , this.settings.width.large  , this.settings.folder.out)
-        await this.make_screenshoot(url , 'desk' , this.settings.width.xlarge , this.settings.folder.out)
-    },
-
-
-
-    init: function(){
+    get init(){
         process.setMaxListeners(0)
-        this.settings = require( "./config.json" ) // local config, copy from sample-config.json
-        console.log(chalk.yellow('start'))
-        this.prerun()
+        this.emptyFolders()
 
-        this.settings.url.pages.forEach( (el) => this.site_url(el) )
+        cfg.url.pages.forEach( url => this.site_url(url) )
+        console.log(cfg.url.pages)
     }
 }
 
-Dw.init()
+new Dw().init
