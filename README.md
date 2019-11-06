@@ -3,22 +3,26 @@
 Front end web developer testing tool.
 Set url's, width of browser, then capture and compare screenshots to check what part of website is affected by your code. 
 
-Browse screenshots instead surfing in browser to check all pages, resolutions, mobile / desktop version's 
+Browse screenshots instead surfing in browser to check all pages, resolutions, mobile / desktop version's. 
 
 ## Installation ## 
 
 ```
 npm start
-cp sample-config.json config.json
+cp sample-config.js config.js
 ```
 
 Add domain and pages to config.json, set what you want to set...
 
 ## Usage ##
 
-`npm test`
+`npm start`
 
 After first run it will copy images from `out/` to `orig/`.
+At the end t will print report.
+
+![screenshoot](https://raw.githubusercontent.com/und3rdg/diffweb/master/ss.png)
+
 
 
 ## Folder structure ##
