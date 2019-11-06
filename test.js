@@ -129,7 +129,7 @@ class Dw {
                 console.log(yellow("Copy from:"), out, yellow("to:"), orig)
                 fs.copyFileSync(out, orig)
                 this.report.push({
-                    filename: filename,
+                    filename: out,
                     url: url,
                     error: 'Orig is missing',
                 })
