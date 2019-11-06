@@ -15,9 +15,16 @@ const {red, green, yellow, blue} = chalk
 // local config, copy from sample-config.js
 const cfg = require( "./config.js" )
 
+
+
 class Dw {
-    delay(ms){
-        return new Promise(resolve => setTimeout(resolve, ms))
+    constructor() {
+        // {
+        //     filename: "file-name.jpg",
+        //     url: "http://domain.dupa/file/name",
+        //     error: "error message",
+        // }
+        this.report = []
     }
 
 
@@ -42,8 +49,15 @@ class Dw {
             await page.goto(page_url, {domcontentloaded: true})
         } catch(err) {
             console.log(red(page_url + " (404)"))
+            this.report.push({
+                filename: filename,
+                url: url,
+                error: '404',
+            })
         }
-        await this.delay(cfg.timeout)
+
+        await async_delay(cfg.timeout)
+
         await page.screenshot({
             path     : folder + '/' + filename,
             fullPage : cfg.isFullPage,
@@ -53,12 +67,12 @@ class Dw {
 
         await browser.close()
 
-        this.get_diff(filename, page_url)
+        await this.get_diff(filename, page_url)
     }
 
 
 
-    get_diff(filename, url){
+    async get_diff(filename, url){
         const options = {
             output: {
                 errorColor: {
@@ -81,12 +95,20 @@ class Dw {
 
 
         this.fileShouldExist(orig, out, url)
+        // bug, if file wasn't exist it will be created and compared (false positive).
+        // It should stop here, and not compare new image.
+        // Bug is nearly invisible now and its not appearing in final report.
 
         resemblejs.compare(orig, out, options, (err, data) => {
             if (err || data.misMatchPercentage > cfg.misMatch_tolerance ) {
                 try {
                     console.log(`${red('DIFF! --> ')}  ${red(data.misMatchPercentage + '%')} ${blue(url)} ${filename}`)
                     fs.writeFileSync(diff, data.getBuffer(), "binary")
+                    this.report.push({
+                        filename: filename,
+                        url: url,
+                        error: `DIFF! ${data.misMatchPercentage}%`,
+                    })
                 } catch(err) {
                     console.log(red(err))
                 }
@@ -96,6 +118,8 @@ class Dw {
         })
     }
 
+
+
     fileShouldExist(orig, out, url) {
         try {
             fs.lstatSync(orig).isFile()
@@ -104,6 +128,11 @@ class Dw {
                 console.log(red(orig, "is missing", yellow("Noting to compare."), url))
                 console.log(yellow("Copy from:"), out, yellow("to:"), orig)
                 fs.copyFileSync(out, orig)
+                this.report.push({
+                    filename: filename,
+                    url: url,
+                    error: 'Orig is missing',
+                })
             } else {
                 console.log(red(err))
             }
@@ -111,7 +140,8 @@ class Dw {
     }
 
 
-    emptyFolders(){
+
+    empty_folders(){
         const dirArr = [
             cfg.folder.out,
             cfg.folder.diff,
@@ -133,13 +163,40 @@ class Dw {
 
 
 
-    get init(){
-        process.setMaxListeners(0)
-        this.emptyFolders()
+    show_report(report) {
+        console.log()
+        console.log(yellow('*******REPORT**************'))
+        report.forEach( el => {
+            console.log(blue(el.url))
+            console.log(green(el.filename))
+            console.log(red(el.error))
+            console.log(yellow('***************************'))
+        })
+    }
 
-        cfg.url.pages.forEach( url => this.site_url(url) )
-        console.log(cfg.url.pages)
+    init = async () => {
+        process.setMaxListeners(0)
+        this.empty_folders()
+
+        await async_forEach(cfg.url.pages, async url => this.site_url(url))
+        // console.log(JSON.stringify(this.report, null, 4))
+        this.show_report(this.report)
     }
 }
 
-new Dw().init
+new Dw().init()
+
+
+
+async function async_forEach(array, callback) {
+    for (let index = 0; index < array.length; index++) {
+        await callback(array[index], index, array);
+    }
+}
+
+
+
+function async_delay(ms){
+    return new Promise(resolve => setTimeout(resolve, ms))
+}
+
