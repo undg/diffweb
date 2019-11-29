@@ -1,4 +1,4 @@
-{
+module.exports = {
   "timeout": 0,
   "animation_speed": 1,
   "misMatch_tolerance": 5,
